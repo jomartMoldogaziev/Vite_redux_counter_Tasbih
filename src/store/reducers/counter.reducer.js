@@ -8,6 +8,8 @@ const counterReducer = (state = 0, action) => {
             return state - 1;
             case RESET:
                 return state = 0;
+                  case 'SET_COUNTER': // Обработка установки счетчика
+            return { ...state, counter: action.payload };
         default:
             return state;
     }

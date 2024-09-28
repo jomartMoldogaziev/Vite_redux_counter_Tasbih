@@ -25,8 +25,8 @@ const images = [
 const initialColors = Array(11).fill('lightgray'); 
 
 const Counter = () => {
-    const counter = useSelector((state) => state.counter);
     const dispatch = useDispatch();
+    const [counter, setCounter] = useState(0); // Локальный стейт для счетчика
     const [isMuted, setIsMuted] = useState(false);
     const [colors, setColors] = useState(initialColors); 
     const [isLimited, setIsLimited] = useState(true); 
@@ -34,12 +34,16 @@ const Counter = () => {
 
     useEffect(() => {
         const savedClickCount = localStorage.getItem('clickCount');
+        const savedCounter = localStorage.getItem('counter'); // Сохраняем значение счётчика
         const savedIsMuted = localStorage.getItem('isMuted');
         const savedIsLimited = localStorage.getItem('isLimited');
         const savedColors = JSON.parse(localStorage.getItem('colors'));
 
         if (savedClickCount) {
             setClickCount(Number(savedClickCount));
+        }
+        if (savedCounter) {
+            setCounter(Number(savedCounter)); // Восстанавливаем значение счётчика
         }
         if (savedIsMuted !== null) {
             setIsMuted(savedIsMuted === 'true');
@@ -86,12 +90,10 @@ const Counter = () => {
     };
 
     const handleIncrement = () => {
-        
         if (isLimited && counter >= 100) {
             return; 
         }
 
-       
         setColors((prevColors) => {
             const newColors = [...prevColors];
             const nextIndex = counter % newColors.length; 
@@ -120,11 +122,14 @@ const Counter = () => {
             return newCount;
         });
 
-        dispatch(increment());
+        const newCounter = counter + 1;
+        setCounter(newCounter); // Обновляем локальный стейт счетчика
+        localStorage.setItem('counter', newCounter); // Сохраняем в localStorage
         playClickSound();
     };
 
     const handleReset = () => {
+        setCounter(0);
         dispatch(reset());
         playResetSound();
         setColors(initialColors);
@@ -132,6 +137,7 @@ const Counter = () => {
 
         localStorage.removeItem('clickCount');
         localStorage.removeItem('colors');
+        localStorage.removeItem('counter'); // Удаляем значение счётчика из localStorage
     };
 
     return (
@@ -153,7 +159,13 @@ const Counter = () => {
                 </label>
             </div>
             <div className="counter-buttons">
-                <button className='minus' onClick={() => { dispatch(decrement()); playClickSound(); }}>-</button>
+                <button className='minus' onClick={() => { 
+                    if (counter > 0) {
+                        setCounter(counter - 1);
+                        localStorage.setItem('counter', counter - 1); // Сохраняем в localStorage
+                        playClickSound(); 
+                    }
+                }}>-</button>
                 <button className="sound-button" onClick={toggleSound}>
                     {isMuted ? (
                         <i className="fas fa-volume-mute"></i>
